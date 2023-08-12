@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 # import discord
 # from discord.ext import commands
 from interactions import *
+from interactions.api.events import Component
 from asyncio import TimeoutError
 
 load_dotenv()
@@ -37,18 +38,30 @@ async def deploy_server(ctx: SlashContext):
     components: list[ActionRow] = [
         ActionRow(
             Button(
+                custom_id="start_server",
                 style=ButtonStyle.GREEN,
                 label="Start Server",
             ),
             Button(
+                custom_id="stop_server",
                 style=ButtonStyle.GREEN,
                 label="Shut Down Server",
             )
         )
     ]
+    await ctx.send("Deploy your squad server now.", components=components)
 
-    await ctx.send("Look, Buttons!", components=components)
 
+@listen()
+async def on_component(event: Component):
+    ctx = event.ctx
+
+    match ctx.custom_id:
+        case "start_server":
+            await ctx.send("You clicked it!")
+    match ctx.custom_id:
+        case "stop_server":
+            await ctx.send("You clicked it!")
 
 bot.start(BOT_TOKEN)
 
