@@ -2,7 +2,8 @@ import os
 from dotenv import load_dotenv
 # import discord
 # from discord.ext import commands
-from interactions import Client, Intents, listen, slash_command, SlashContext
+from interactions import *
+from asyncio import TimeoutError
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -22,11 +23,58 @@ async def on_message_create(event):
     print(event.message)
     print(event.message.content)
 
-@slash_command(name="my_command", description="My first command :)")
+@slash_command(name="help", description="Help menu WIP")
 async def my_command_function(ctx: SlashContext):
-    await ctx.send("Hello World")
+    await ctx.send("Work in Progress")
+
+
+
+
+
+
+@slash_command(name="deploy_server", description="lorem")
+async def deploy_server(ctx: SlashContext):
+    components: list[ActionRow] = [
+        ActionRow(
+            Button(
+                style=ButtonStyle.GREEN,
+                label="Start Server",
+            ),
+            Button(
+                style=ButtonStyle.GREEN,
+                label="Shut Down Server",
+            )
+        )
+    ]
+
+    await ctx.send("Look, Buttons!", components=components)
+
 
 bot.start(BOT_TOKEN)
+
+
+# ARCHIVE
+
+# Context Menu Examples
+# https://interactions-py.github.io/interactions.py/Guides/04%20Context%20Menus/
+# @message_context_menu(name="repeat")
+# async def repeat(ctx: ContextMenuContext):
+#     message: Message = ctx.target
+#     await ctx.send(message.content)
+
+# @user_context_menu(name="ping")
+# async def ping(ctx: ContextMenuContext):
+#     member: Member = ctx.target
+#     await ctx.send(member.mention)
+
+
+
+
+
+
+
+
+# OLD CODE
 
 # intents = discord.Intents.default()
 # intents.messages = True
