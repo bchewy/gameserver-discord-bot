@@ -100,7 +100,7 @@ resource "aws_route_table_association" "rta" {
 # Create an EC2 instance
 resource "aws_instance" "ec2" {
   ami                         = "ami-0df7a207adb9748c7"
-  instance_type               = "t2.medium"
+  instance_type               = "c5.large"
   subnet_id                   = aws_subnet.subnet.id
   vpc_security_group_ids      = [aws_security_group.security_grp.id]
   associate_public_ip_address = true
@@ -133,10 +133,13 @@ resource "aws_instance" "ec2" {
               echo sleeping
               sleep 5
 
-              echo replaceconfig
-              
+              echo replace-the-config
+              cd /home/squadserver/serverfiles/SquadGame/ServerConfig/
+              mv Server.cfg Server.cfg.bak
+              wget -O Server.cfg https://bchewy.s3.ap-southeast-1.amazonaws.com/ServerConfig/Server.cfg
+              chown -R squadserver:squadserver /home/squadserver/serverfiles/SquadGame/ServerConfig/
 
-              echo startingserver
+              echo starting-the-server
               su - squadserver -c "./squadserver start"
 
               EOF
