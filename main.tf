@@ -166,7 +166,7 @@ resource "null_resource" "file_check" {
       "  echo 'File not found, sleeping...'",
       "  sleep 10",
       "done",
-      "echo 'File exists!'"
+      "echo 'User_data script complete, your server should be up!'"
     ]
   }
 
