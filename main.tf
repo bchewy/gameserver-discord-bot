@@ -97,10 +97,19 @@ resource "aws_route_table_association" "rta" {
 }
 
 
+resource "aws_ssm_parameter" "ready" {
+  name  = "/instance/ready"
+  type  = "String"  
+  value = "NOT_READY"
+}
+
+
 # Create an EC2 instance
 resource "aws_instance" "ec2" {
   ami                         = "ami-0df7a207adb9748c7"
-  instance_type               = "c5.large"
+  # instance_type               = "c5.large"
+  instance_type               = "c5n.large"
+  # instance_type               = "t2.medium"
   subnet_id                   = aws_subnet.subnet.id
   vpc_security_group_ids      = [aws_security_group.security_grp.id]
   associate_public_ip_address = true
@@ -136,18 +145,81 @@ resource "aws_instance" "ec2" {
               echo replace-the-config
               cd /home/squadserver/serverfiles/SquadGame/ServerConfig/
               mv Server.cfg Server.cfg.bak
+              mv Admins.cfg Admins.cfg.bak
               wget -O Server.cfg https://bchewy.s3.ap-southeast-1.amazonaws.com/ServerConfig/Server.cfg
+              wget -O Admins.cfg https://bchewy.s3.ap-southeast-1.amazonaws.com/ServerConfig/Admins.cfg
+
               chown -R squadserver:squadserver /home/squadserver/serverfiles/SquadGame/ServerConfig/
 
               echo starting-the-server
               su - squadserver -c "./squadserver start"
 
+              echo "User data script complete" > /tmp/user_data_complete
+              echo "READY" > /var/lib/ready
+
               EOF
+    user_data_replace_on_change = true
+    # instance_ready_timeout = "5m"
 
   tags = {
     Name = "Squad Server"
   }
 }
+
+
+
+# Check if instance is ready
+# resource "null_resource" "check_ready" {
+
+#   provisioner "local-exec" {
+#   command = <<EOT
+#     cmd /C "
+#       aws ssm send-command ^
+#         --document-name AWS-RunShellScript ^
+#         --instance-ids ${aws_instance.ec2.id} ^ 
+#         --comment 'Signal ready' ^
+#         --parameters '{\"commands\":[\"if [ -f /var/lib/ready ]; then echo READY > \\${aws_ssm_parameter.ready.name}; fi\"]}'^
+#         --region ap-southeast-1
+#     "
+#   EOT
+#   }
+
+#   triggers = {
+#     ec2_id = aws_instance.ec2.id
+#   }
+
+# }
+
+
+
+# # Windows local exec
+# resource "null_resource" "wait_for_user_data" {
+#   provisioner "local-exec" {
+#     command = <<EOT
+
+#     EOT
+#   }
+
+#   triggers = {
+#     instance_id = aws_instance.ec2.id
+#   }
+# }
+
+
+# MAC/Linux local exec
+# resource "null_resource" "wait_for_user_data" {
+#   provisioner "local-exec" {
+#     command = <<-EOT
+#       until ssh -o StrictHostKeyChecking=no -i BrianJune2023.pem ubuntu@${aws_instance.ec2.public_ip} 'test -f /tmp/user_data_complete'; do
+#         sleep 10
+#       done
+#     EOT
+#   }
+
+#   triggers = {
+#     instance_id = aws_instance.ec2.id
+#   }
+# }
 
 output "instance_public_ip" {
   value = aws_instance.ec2.public_ip
