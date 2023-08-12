@@ -1,4 +1,4 @@
-#REPO IS WIP!
+# REPO IS WIP!
 This repository has two main components:
 
 Discord Bot: A Python discord bot allows users to instantly provision a Squad server (minus actual provisioning time) through a Discord interface.
