@@ -1,5 +1,3 @@
-# discord-squad-server
-
 This repo consists of a two sections:
 
 1. A simple Python-based discord bot that allows the user to make use of a discord bot as an interface to provision a squad server almost instantly (minus provisioning time).
