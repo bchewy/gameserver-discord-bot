@@ -3,17 +3,6 @@ provider "aws" {
 }
 
 
-# resource "aws_cloudwatch_log_group" "squad_server_logs" {
-#   name = "squad-logs"
-# }
-
-# resource "aws_cloudwatch_log_stream" "squad_server_logs" {
-#   name           = aws_instance.ec2.id
-#   log_group_name = aws_cloudwatch_log_group.squad_server_logs.name
-# }
-
-
-# Create a new VPC
 resource "aws_vpc" "vpc" {
   cidr_block = "10.0.0.0/16"
   tags = {
@@ -21,7 +10,6 @@ resource "aws_vpc" "vpc" {
   }
 }
 
-# Create a subnet within the VPC
 resource "aws_subnet" "subnet" {
   vpc_id     = aws_vpc.vpc.id
   cidr_block = "10.0.1.0/24"
@@ -30,7 +18,6 @@ resource "aws_subnet" "subnet" {
   }
 }
 
-# Create a security group that allows all access
 resource "aws_security_group" "security_grp" {
   vpc_id = aws_vpc.vpc.id
   name   = "all_access_sg"
@@ -99,17 +86,14 @@ resource "aws_route_table_association" "rta" {
 
 resource "aws_ssm_parameter" "ready" {
   name  = "/instance/ready"
-  type  = "String"  
+  type  = "String"
   value = "NOT_READY"
 }
 
 
-# Create an EC2 instance
 resource "aws_instance" "ec2" {
   ami                         = "ami-0df7a207adb9748c7"
-  # instance_type               = "c5.large"
-  instance_type               = "c5n.large"
-  # instance_type               = "t2.medium"
+  instance_type               = "c5.large"
   subnet_id                   = aws_subnet.subnet.id
   vpc_security_group_ids      = [aws_security_group.security_grp.id]
   associate_public_ip_address = true
@@ -119,8 +103,6 @@ resource "aws_instance" "ec2" {
     volume_type = "gp2"
     volume_size = 50
   }
-
-  # User Data
   user_data = <<-EOF
               #!/bin/bash             
               sudo dpkg --add-architecture i386
@@ -158,73 +140,43 @@ resource "aws_instance" "ec2" {
               echo "READY" > /var/lib/ready
 
               EOF
-    user_data_replace_on_change = true
-    # instance_ready_timeout = "5m"
-
   tags = {
     Name = "Squad Server"
   }
 }
 
-
-
-# Check if instance is ready
-# resource "null_resource" "check_ready" {
-
-#   provisioner "local-exec" {
-#   command = <<EOT
-#     cmd /C "
-#       aws ssm send-command ^
-#         --document-name AWS-RunShellScript ^
-#         --instance-ids ${aws_instance.ec2.id} ^ 
-#         --comment 'Signal ready' ^
-#         --parameters '{\"commands\":[\"if [ -f /var/lib/ready ]; then echo READY > \\${aws_ssm_parameter.ready.name}; fi\"]}'^
-#         --region ap-southeast-1
-#     "
-#   EOT
-#   }
-
-#   triggers = {
-#     ec2_id = aws_instance.ec2.id
-#   }
-
-# }
-
-
-
-# # Windows local exec
-# resource "null_resource" "wait_for_user_data" {
-#   provisioner "local-exec" {
-#     command = <<EOT
-
-#     EOT
-#   }
-
-#   triggers = {
-#     instance_id = aws_instance.ec2.id
-#   }
-# }
-
-
-# MAC/Linux local exec
-# resource "null_resource" "wait_for_user_data" {
-#   provisioner "local-exec" {
-#     command = <<-EOT
-#       until ssh -o StrictHostKeyChecking=no -i BrianJune2023.pem ubuntu@${aws_instance.ec2.public_ip} 'test -f /tmp/user_data_complete'; do
-#         sleep 10
-#       done
-#     EOT
-#   }
-
-#   triggers = {
-#     instance_id = aws_instance.ec2.id
-#   }
-# }
-
-output "instance_public_ip" {
-  value = aws_instance.ec2.public_ip
+locals {
+  file_to_check = "/tmp/user_data_complete"
 }
 
-output "instance_private_ip" {
-  value = aws_instance.ec2.private_ip
+# Null resource for remote file check
+resource "null_resource" "file_check" {
+
+  connection {
+    type        = "ssh"
+    host        = aws_instance.ec2.public_ip
+    user        = "ubuntu"
+    private_key = file("BrianJune2023.pem")
+  }
+
+  provisioner "remote-exec" {
+
+    inline = [
+      "until [ -f ${local.file_to_check} ]; do",
+      "  echo 'File not found, sleeping...'",
+      "  sleep 10",
+      "done",
+      "echo 'File exists!'"
+    ]
+  }
+
 }
+
+
+# output "instance_public_ip" {
+#   value = aws_instance.ec2.public_ip
+# }
+
+# output "instance_private_ip" {
+#   value = aws_instance.ec2.private_ip
+# }
