@@ -13,6 +13,8 @@ The Discord bot acts as a convenient frontend to trigger the server provisioning
 - Change config files from default squad configs/replace with your settings,
 
 ### Todo:
+- Increase preparation time (NOW: ~9 minutes to live server)
+    - Attempt to cut down time by provisioning from an AMI with updated squad.
 - Proper security group settings (literally opened all ports + ssh atm)
 - Additional support for other cloud providers (Google Cloud Compute, Alibaba, etc)
 - Make specific changes for configuration files, specific changes, being able to add an admin/whitelist **via the discord bot**
