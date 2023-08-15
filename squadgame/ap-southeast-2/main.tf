@@ -22,7 +22,7 @@ resource "aws_vpc" "vpc" {
 resource "aws_subnet" "subnet" {
   vpc_id     = aws_vpc.vpc.id
   cidr_block = "10.0.1.0/24"
-  # availability_zone = "ap-southeast-2-per-1a" # deploy to local zone perth
+  availability_zone = "ap-southeast-2-per-1a" # deploy to local zone perth
   tags = {
     Name = "squad_server_subnet"
   }
@@ -102,8 +102,10 @@ resource "aws_ssm_parameter" "ready" {
 
 
 resource "aws_instance" "ec2" {
-  ami = "ami-0a95cabff90e00cad" # SYDNEY REGION
-  instance_type               = "t2.medium"
+  ami = "ami-0a95cabff90e00cad"
+  # use t3.medium or c5.2xlarge for perth local zone
+  # instance_type               = "t3.medium" 
+  instance_type               = "t3.medium"
   subnet_id                   = aws_subnet.subnet.id
   vpc_security_group_ids      = [aws_security_group.security_grp.id]
   associate_public_ip_address = true
