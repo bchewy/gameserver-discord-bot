@@ -93,7 +93,7 @@ resource "aws_ssm_parameter" "ready" {
   # ami                         = "ami-0df7a207adb9748c7" # Default Ubuntu AMI
 resource "aws_instance" "ec2" {
   ami                                    = "ami-04323cc6f152870b6" # SINGAPORE REGION
-  # instance_type               = "c5.large"
+  instance_type               = "c5.large"
   subnet_id                   = aws_subnet.subnet.id
   vpc_security_group_ids      = [aws_security_group.security_grp.id]
   associate_public_ip_address = true
